@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Suivi Lessive Familial</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f0f4f8;
+      color: #111;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .section {
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    select, input[type="text"], textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+    }
+    input[type="file"] {
+      margin-bottom: 15px;
+    }
+    .thumb-preview {
+      width: 120px;
+      height: 120px;
+      border-radius: 16px;
+      background: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .thumb-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    button {
+      background: linear-gradient(135deg, #6D28D9, #06B6D4);
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 28px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #4B1D91, #048DA1);
+    }
+    .admin-select {
+      max-width: 300px;
+      margin: 0 auto 30px auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin - Suivi Lessive Familial</h1>
+
+  <div class="admin-select">
+    <label for="admin-name">Sélectionne ton nom</label>
+    <select id="admin-name">
+      <option value="" selected disabled>Choisis...</option>
+      <option value="omran">Omran</option>
+      <option value="amir">Amir</option>
+      <option value="youssof">Youssof</option>
+      <option value="ahlam">Ahlam</option>
+      <option value="loukman">Loukman</option>
+    </select>
+  </div>
+
+  <div class="section" id="form-section" style="display:none;">
+    <form id="item-form">
+      <label for="item-name">Nom du vêtement</label>
+      <input type="text" id="item-name" required placeholder="Ex: T-shirt rouge" />
+
+      <label for="item-category">Catégorie</label>
+      <select id="item-category" required>
+        <option value="" disabled selected>Choisis une catégorie</option>
+        <option value="tshirt">T-shirt</option>
+        <option value="pantalon">Pantalon</option>
+        <option value="short">Short</option>
+        <option value="veste">Veste</option>
+      </select>
+
+      <label for="item-photo">Photo</label>
+      <input type="file" id="item-photo" accept="image/*" required />
+      <div class="thumb-preview" id="thumb-preview">Aucune image</div>
+
+      <label for="item-comment">Commentaire (optionnel)</label>
+      <textarea id="item-comment" rows="3" placeholder="Ex: Lavé à la main"></textarea>
+
+      <button type="submit">Ajouter le vêtement</button>
+    </form>
+  </div>
+
+  <script>
+    const adminSelect = document.getElementById('admin-name');
+    const formSection = document.getElementById('form-section');
+    const thumbPreview = document.getElementById('thumb-preview');
+    const itemPhoto = document.getElementById('item-photo');
+    let selectedAdmin = null;
+
+    adminSelect.addEventListener('change', () => {
+      selectedAdmin = adminSelect.value;
+      formSection.style.display = selectedAdmin ? 'block' : 'none';
+    });
+
+    itemPhoto.addEventListener('change', () => {
+      const file = itemPhoto.files[0];
+      if (!file) {
+        thumbPreview.innerHTML = 'Aucune image';
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      thumbPreview.innerHTML = `<img src="${url}" alt="Preview" />`;
+    });
+
+    document.getElementById('item-form').addEventListener('submit', e => {
+      e.preventDefault();
+      if (!selectedAdmin) {
+        alert('Sélectionne ton nom en premier.');
+        return;
+      }
+      // Pour l’instant, juste un message, on fera Firebase après
+      alert(`Vêtement ajouté par ${selectedAdmin} :\n` +
+        `Nom : ${document.getElementById('item-name').value}\n` +
+        `Catégorie : ${document.getElementById('item-category').value}`);
+      // Reset formulaire
+      e.target.reset();
+      thumbPreview.innerHTML = 'Aucune image';
+    });
+  </script>
+</body>
+</html>
