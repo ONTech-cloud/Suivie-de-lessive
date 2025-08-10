@@ -204,25 +204,25 @@
   </div>
 
   <script>
-    /**
-     * NOTE INTÉGRATION FIREBASE (plus tard):
-     *  - Remplacer MOCK_DATA par Firestore
-     *  - Utiliser Storage pour les photos
-     *  - Écrire dans la collection `historique` à chaque modification
-     *
-     * // Firebase config fournie
-     * import { initializeApp } from "firebase/app";
-     * import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
-     * import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-     * const firebaseConfig = {
-     *   apiKey: "AIzaSyAhJROpEyoGX0Hpm1QU8XirWjEqQK6eChE",
-     *   authDomain: "suivie-lessive.firebaseapp.com",
-     *   projectId: "suivie-lessive",
-     *   storageBucket: "suivie-lessive.firebasestorage.app",
-     *   messagingSenderId: "565381881043",
-     *   appId: "1:565381881043:web:16e75adb9fcf9224f24826"
-     * };
-     */
+
+     NOTE INTÉGRATION FIREBASE (plus tard):
+       - Remplacer MOCK_DATA par Firestore
+       - Utiliser Storage pour les photos
+       - Écrire dans la collection `historique` à chaque modification
+     
+     // Firebase config fournie
+      import { initializeApp } from "firebase/app";
+      import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
+      import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+      const firebaseConfig = {
+        apiKey: "AIzaSyAhJROpEyoGX0Hpm1QU8XirWjEqQK6eChE",
+        authDomain: "suivie-lessive.firebaseapp.com",
+        projectId: "suivie-lessive",
+        storageBucket: "suivie-lessive.firebasestorage.app",
+        messagingSenderId: "565381881043",
+        appId: "1:565381881043:web:16e75adb9fcf9224f24826"
+     *};
+     
 
     // --- Données mock pour démo hors-ligne ---
     const MOCK_DATA = [
