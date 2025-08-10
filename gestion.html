@@ -40,7 +40,6 @@
     }
     .title .small{opacity:.85; font-size:1rem; font-weight:600}
     .title .big{font-size:clamp(1.6rem,3.5vw,2.6rem)}
-
     .members{
       display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:18px; width:min(1100px,100%);
     }
@@ -204,13 +203,16 @@
   </div>
 
   <script type="module">
-    //**
+    /**
      * Intégration Firebase : App + Firestore + Storage (v10, modules ESM via CDN)
      */
 
     // --- Firebase (modules ESM) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+      onSnapshot, query, orderBy, where, getDocs, serverTimestamp, limit
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     const firebaseConfig = {
@@ -228,42 +230,37 @@
 
     // --- État en mémoire ---
     let DATA = [];
+    let CURRENT_USER = null;
+    let SELECTION = new Set();
+    let ACTIVE_DETAIL_ID = null;
 
-    // Flux temps réel des vêtements (ordonnés par dateModification desc si présent)
+    // Flux temps réel des vêtements
     const vetementsRef = collection(db, 'vetements');
     const qVet = query(vetementsRef);
     onSnapshot(qVet, (snap)=>{
       DATA = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-      // tri côté client par dateModification desc
       DATA.sort((a,b)=> (b.dateModification?.seconds||0) - (a.dateModification?.seconds||0));
       renderGrid();
     });
 
+    // --- Refs DOM ---
     const byId = (id)=>document.getElementById(id);
     const selectScreen = byId('select');
     const managerScreen = byId('manager');
     const who = byId('who');
-    const whoTag = byId('whoTag');
     const grid = byId('grid');
     const bulkBtn = byId('bulkStatusBtn');
     const changeUserBtn = byId('changeUser');
     const addBtn = byId('addBtn');
-
     const search = byId('search');
     const fCat = byId('f-cat');
     const fStatus = byId('f-status');
-
     const modal = byId('modal');
     const mName = byId('m-name');
     const mStatus = byId('m-status');
     const mCat = byId('m-cat');
     const mComment = byId('m-comment');
     const mPhoto = byId('m-photo');
-
-    let CURRENT_USER = null;
-    // DATA est maintenant rempli par Firestore via onSnapshot()
-    let SELECTION = new Set();
-    let ACTIVE_DETAIL_ID = null;
 
     // ————— Étape 1 : choisir le membre
     document.querySelectorAll('.member-btn').forEach(btn=>{
@@ -273,7 +270,7 @@
         selectScreen.style.display = 'none';
         managerScreen.classList.add('active');
         renderGrid();
-      })
+      });
     });
 
     changeUserBtn.addEventListener('click', ()=>{
@@ -284,7 +281,7 @@
       SELECTION.clear();
     });
 
-    // ————— Rendu grille
+    // Helpers statut
     function statusPillClass(s){
       if(s==='lessive') return 'status-pill s-lessive';
       if(s==='plie') return 'status-pill s-plie';
@@ -294,14 +291,15 @@
       return s==='lessive' ? 'Dans la lessive' : s==='plie' ? 'Plié' : "Dans l'armoire";
     }
 
+    // ————— Rendu grille
     function renderGrid(){
       const q = (search.value||'').toLowerCase();
       const cat = fCat.value;
       const st = fStatus.value;
-      const filtered = DATA.filter(x=>
+      const filtered = DATA.filter(x =>
         (!cat || x.categorie===cat) &&
         (!st || x.statut===st) &&
-        (x.nom.toLowerCase().includes(q) || (x.commentaire||'').toLowerCase().includes(q))
+        ((x.nom||'').toLowerCase().includes(q) || (x.commentaire||'').toLowerCase().includes(q))
       );
 
       grid.innerHTML = filtered.map(item=>{
@@ -312,15 +310,15 @@
               <input type="checkbox" ${SELECTION.has(item.id)?'checked':''} />
               ✓
             </label>
-            <img src="${item.photo}" alt="${item.nom}" />
+            <img src="${item.photo}" alt="${item.nom||''}" />
             <div class="meta">
-              <div class="name">${item.nom}</div>
+              <div class="name">${item.nom||''}</div>
               <div class="row">
-                <span class="chip">${item.categorie}</span>
+                <span class="chip">${item.categorie||''}</span>
                 <span class="${statusPillClass(item.statut)}">${statusLabel(item.statut)}</span>
               </div>
             </div>
-          </article>`
+          </article>`;
       }).join('');
 
       // Listeners après rendu
@@ -340,9 +338,7 @@
       updateBulkBtn();
     }
 
-    function updateBulkBtn(){
-      bulkBtn.disabled = SELECTION.size === 0;
-    }
+    function updateBulkBtn(){ bulkBtn.disabled = SELECTION.size === 0; }
 
     // Filtres & recherche
     [search, fCat, fStatus].forEach(el=> el.addEventListener('input', renderGrid));
@@ -352,28 +348,27 @@
       const item = DATA.find(x=>x.id===id);
       if(!item) return;
       ACTIVE_DETAIL_ID = id;
-      mName.textContent = item.nom;
-      mPhoto.src = item.photo;
-      mCat.textContent = item.categorie;
+      mName.textContent = item.nom||'';
+      mPhoto.src = item.photo||'';
+      mCat.textContent = item.categorie||'—';
       mComment.textContent = item.commentaire || '—';
       mStatus.className = statusPillClass(item.statut);
       mStatus.textContent = statusLabel(item.statut);
       modal.classList.add('open');
       modal.setAttribute('aria-hidden','false');
     }
-
     function closeModal(){
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden','true');
       ACTIVE_DETAIL_ID = null;
     }
-
     modal.querySelectorAll('[data-close]').forEach(el=> el.addEventListener('click', closeModal));
 
     // Actions de statut dans le modal
     modal.querySelectorAll('[data-status]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const target = btn.getAttribute('data-status');
+        if(!ACTIVE_DETAIL_ID) return;
         setStatus(ACTIVE_DETAIL_ID, target, `Changement via détails par ${CURRENT_USER}`);
         closeModal();
       });
@@ -388,14 +383,12 @@
       renderGrid();
     });
 
-    // (Démo) bouton Ajouter — ici on simule l'ajout d'un vêtement
+    // Ajouter un vêtement (version simple via prompts)
     addBtn.addEventListener('click', async ()=>{
       if(!CURRENT_USER){ alert('Veuillez choisir un membre.'); return; }
-      const nom = prompt('Nom du vêtement ?');
-      if(!nom) return;
+      const nom = prompt('Nom du vêtement ?'); if(!nom) return;
       const categorie = prompt('Catégorie ? (T-shirt / Pantalon / Short / Veste)', 'T-shirt') || 'T-shirt';
-      const photoURL = prompt('URL de la photo (obligatoire)');
-      if(!photoURL){ alert('Photo obligatoire.'); return; }
+      const photoURL = prompt('URL de la photo (obligatoire)'); if(!photoURL){ alert('Photo obligatoire.'); return; }
       const commentaire = prompt('Commentaire (optionnel)', '') || '';
       try{
         const ref = await addDoc(collection(db,'vetements'),{
@@ -412,19 +405,8 @@
         alert('Erreur ajout: '+err.message);
       }
     });
-      if(!nom) return;
-      const categorie = prompt('Catégorie ? (T-shirt / Pantalon / Short / Veste)', 'T-shirt') || 'T-shirt';
-      const photo = prompt('URL de la photo (obligatoire)', '') || '';
-      if(!photo){ alert('Photo obligatoire.'); return; }
-      const commentaire = prompt('Commentaire (optionnel)', '') || '';
-      const id = String(Date.now());
-      DATA.unshift({ id, nom, categorie, photo, statut:'lessive', commentaire, proprietaire: CURRENT_USER });
-      // TODO: Firestore addDoc + Storage (quand branché)
-      // TODO: Historique: "CURRENT_USER a ajouté ..."
-      renderGrid();
-    });
 
-    // (Démo) supprimer depuis modal
+    // Supprimer depuis le modal
     document.getElementById('deleteBtn').addEventListener('click', async ()=>{
       if(!ACTIVE_DETAIL_ID) return;
       if(confirm('Supprimer ce vêtement ?')){
@@ -440,17 +422,17 @@
         }
       }
     });
-        // TODO: Firestore deleteDoc
-        closeModal();
-        renderGrid();
-      }
-    });
 
-    // Historique (placeholder)
+    // Historique (affiche les 10 dernières lignes)
     document.getElementById('historyBtn').addEventListener('click', async ()=>{
       if(!ACTIVE_DETAIL_ID) return;
       try{
-        const qHist = query(collection(db,'historique'), where('vetementId','==',ACTIVE_DETAIL_ID), orderBy('date','desc'), limit(10));
+        const qHist = query(
+          collection(db,'historique'),
+          where('vetementId','==',ACTIVE_DETAIL_ID),
+          orderBy('date','desc'),
+          limit(10)
+        );
         const snap = await getDocs(qHist);
         const lines = [];
         snap.forEach(d=>{
@@ -458,14 +440,13 @@
           const ts = h.date?.seconds ? new Date(h.date.seconds*1000) : new Date();
           lines.push(`• ${ts.toLocaleString()} — ${h.membre}: ${h.action}`);
         });
-        alert(lines.length ? lines.join('
-') : 'Aucune entrée pour le moment.');
+        alert(lines.length ? lines.join('\n') : 'Aucune entrée pour le moment.');
       }catch(err){
         alert('Erreur lecture historique: '+err.message);
       }
     });
-    });
 
+    // Firestore: set statut + trace historique
     function setStatus(id, statut, reason){
       const ref = doc(db,'vetements', id);
       updateDoc(ref, {
