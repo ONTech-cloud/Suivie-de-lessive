@@ -204,13 +204,12 @@
 
   <script type="module">
     /**
-     * Intégration Firebase : App + Firestore + Storage (v10, modules ESM via CDN)
+     * Firebase (v10) — on force un transport compatible pour éviter l’erreur Listen 400.
      */
-
-    // --- Firebase (modules ESM) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+      initializeFirestore, setLogLevel,
+      collection, doc, addDoc, updateDoc, deleteDoc,
       onSnapshot, query, orderBy, where, getDocs, serverTimestamp, limit
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
@@ -225,8 +224,17 @@
     };
 
     const appFB = initializeApp(firebaseConfig);
-    const db = getFirestore(appFB);
+
+    // ✅ clé : long‑polling auto + compat réseau
+    const db = initializeFirestore(appFB, {
+      experimentalAutoDetectLongPolling: true,
+      useFetchStreams: false,
+      ignoreUndefinedProperties: true
+      // si besoin extrême : experimentalForceLongPolling: true
+    });
+
     const storage = getStorage(appFB);
+    setLogLevel && setLogLevel('warn');
 
     // --- État en mémoire ---
     let DATA = [];
@@ -234,14 +242,26 @@
     let SELECTION = new Set();
     let ACTIVE_DETAIL_ID = null;
 
-    // Flux temps réel des vêtements
-    const vetementsRef = collection(db, 'vetements');
-    const qVet = query(vetementsRef);
-    onSnapshot(qVet, (snap)=>{
-      DATA = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-      DATA.sort((a,b)=> (b.dateModification?.seconds||0) - (a.dateModification?.seconds||0));
-      renderGrid();
-    });
+    // Flux temps réel (avec fallback si erreur)
+    const qVet = query(collection(db, 'vetements'));
+    onSnapshot(
+      qVet,
+      (snap)=>{
+        DATA = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+        DATA.sort((a,b)=> (b.dateModification?.seconds||0) - (a.dateModification?.seconds||0));
+        renderGrid();
+      },
+      async (err)=>{
+        console.warn('onSnapshot(vetements) error:', err);
+        try{
+          const s = await getDocs(qVet);
+          DATA = s.docs.map(d=>({ id:d.id, ...d.data() }));
+          renderGrid();
+        }catch(e){
+          alert("Impossible de charger Firestore. Essaie via HTTPS (GitHub Pages) ou désactive l’adblock pour ce site.");
+        }
+      }
+    );
 
     // --- Refs DOM ---
     const byId = (id)=>document.getElementById(id);
@@ -384,7 +404,7 @@
     });
 
     // Ajouter un vêtement (version simple via prompts)
-    addBtn.addEventListener('click', async ()=>{
+    document.getElementById('addBtn').addEventListener('click', async ()=>{
       if(!CURRENT_USER){ alert('Veuillez choisir un membre.'); return; }
       const nom = prompt('Nom du vêtement ?'); if(!nom) return;
       const categorie = prompt('Catégorie ? (T-shirt / Pantalon / Short / Veste)', 'T-shirt') || 'T-shirt';
