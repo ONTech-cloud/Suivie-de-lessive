@@ -203,36 +203,41 @@
     </div>
   </div>
 
-  <script>
-    /**
-     * NOTE INTÉGRATION FIREBASE (plus tard):
-     *  - Remplacer MOCK_DATA par Firestore
-     *  - Utiliser Storage pour les photos
-     *  - Écrire dans la collection `historique` à chaque modification
-     *
-     * // Firebase config fournie
-     * import { initializeApp } from "firebase/app";
-     * import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
-     * import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-     * const firebaseConfig = {
-     *   apiKey: "AIzaSyAhJROpEyoGX0Hpm1QU8XirWjEqQK6eChE",
-     *   authDomain: "suivie-lessive.firebaseapp.com",
-     *   projectId: "suivie-lessive",
-     *   storageBucket: "suivie-lessive.firebasestorage.app",
-     *   messagingSenderId: "565381881043",
-     *   appId: "1:565381881043:web:16e75adb9fcf9224f24826"
-     * };
+  <script type="module">
+    //**
+     * Intégration Firebase : App + Firestore + Storage (v10, modules ESM via CDN)
      */
 
-    // --- Données mock pour démo hors-ligne ---
-    const MOCK_DATA = [
-      { id:"1", nom:"T-shirt rouge", categorie:"T-shirt", photo:"https://images.unsplash.com/photo-1520975693415-1f59c7f2c5df?q=80&w=800&auto=format&fit=crop", statut:"lessive", commentaire:"Coton", proprietaire:"Omran" },
-      { id:"2", nom:"Jean bleu", categorie:"Pantalon", photo:"https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop", statut:"plie", commentaire:"36/38", proprietaire:"Amir" },
-      { id:"3", nom:"Short sport", categorie:"Short", photo:"https://images.unsplash.com/photo-1620799139504-8a50f52d9efd?q=80&w=800&auto=format&fit=crop", statut:"armoire", commentaire:"Nike", proprietaire:"Youssof" },
-      { id:"4", nom:"Veste légère", categorie:"Veste", photo:"https://images.unsplash.com/photo-1520976034084-6f2a1a2a393d?q=80&w=800&auto=format&fit=crop", statut:"lessive", commentaire:"Printemps", proprietaire:"Ahlam" },
-      { id:"5", nom:"T-shirt blanc", categorie:"T-shirt", photo:"https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop", statut:"plie", commentaire:"", proprietaire:"Loukman" },
-      { id:"6", nom:"Pantalon noir", categorie:"Pantalon", photo:"https://images.unsplash.com/photo-1520975933574-5f22d0d5f5af?q=80&w=800&auto=format&fit=crop", statut:"armoire", commentaire:"", proprietaire:"Omran" }
-    ];
+    // --- Firebase (modules ESM) ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAhJROpEyoGX0Hpm1QU8XirWjEqQK6eChE",
+      authDomain: "suivie-lessive.firebaseapp.com",
+      projectId: "suivie-lessive",
+      storageBucket: "suivie-lessive.firebasestorage.app",
+      messagingSenderId: "565381881043",
+      appId: "1:565381881043:web:16e75adb9fcf9224f24826"
+    };
+
+    const appFB = initializeApp(firebaseConfig);
+    const db = getFirestore(appFB);
+    const storage = getStorage(appFB);
+
+    // --- État en mémoire ---
+    let DATA = [];
+
+    // Flux temps réel des vêtements (ordonnés par dateModification desc si présent)
+    const vetementsRef = collection(db, 'vetements');
+    const qVet = query(vetementsRef);
+    onSnapshot(qVet, (snap)=>{
+      DATA = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      // tri côté client par dateModification desc
+      DATA.sort((a,b)=> (b.dateModification?.seconds||0) - (a.dateModification?.seconds||0));
+      renderGrid();
+    });
 
     const byId = (id)=>document.getElementById(id);
     const selectScreen = byId('select');
@@ -256,7 +261,7 @@
     const mPhoto = byId('m-photo');
 
     let CURRENT_USER = null;
-    let DATA = [...MOCK_DATA];
+    // DATA est maintenant rempli par Firestore via onSnapshot()
     let SELECTION = new Set();
     let ACTIVE_DETAIL_ID = null;
 
@@ -384,8 +389,29 @@
     });
 
     // (Démo) bouton Ajouter — ici on simule l'ajout d'un vêtement
-    addBtn.addEventListener('click', ()=>{
+    addBtn.addEventListener('click', async ()=>{
+      if(!CURRENT_USER){ alert('Veuillez choisir un membre.'); return; }
       const nom = prompt('Nom du vêtement ?');
+      if(!nom) return;
+      const categorie = prompt('Catégorie ? (T-shirt / Pantalon / Short / Veste)', 'T-shirt') || 'T-shirt';
+      const photoURL = prompt('URL de la photo (obligatoire)');
+      if(!photoURL){ alert('Photo obligatoire.'); return; }
+      const commentaire = prompt('Commentaire (optionnel)', '') || '';
+      try{
+        const ref = await addDoc(collection(db,'vetements'),{
+          nom, categorie, photo: photoURL, statut:'lessive', commentaire,
+          proprietaire: CURRENT_USER,
+          dateCreation: serverTimestamp(),
+          dateModification: serverTimestamp(),
+          modifiePar: CURRENT_USER
+        });
+        await addDoc(collection(db,'historique'),{
+          vetementId: ref.id, membre: CURRENT_USER, date: serverTimestamp(), action:`Ajout: ${nom}`
+        });
+      } catch(err){
+        alert('Erreur ajout: '+err.message);
+      }
+    });
       if(!nom) return;
       const categorie = prompt('Catégorie ? (T-shirt / Pantalon / Short / Veste)', 'T-shirt') || 'T-shirt';
       const photo = prompt('URL de la photo (obligatoire)', '') || '';
@@ -399,10 +425,21 @@
     });
 
     // (Démo) supprimer depuis modal
-    document.getElementById('deleteBtn').addEventListener('click', ()=>{
+    document.getElementById('deleteBtn').addEventListener('click', async ()=>{
       if(!ACTIVE_DETAIL_ID) return;
       if(confirm('Supprimer ce vêtement ?')){
-        DATA = DATA.filter(x=> x.id !== ACTIVE_DETAIL_ID);
+        try{
+          const ref = doc(db,'vetements',ACTIVE_DETAIL_ID);
+          await deleteDoc(ref);
+          await addDoc(collection(db,'historique'),{
+            vetementId: ACTIVE_DETAIL_ID, membre: CURRENT_USER, date: serverTimestamp(), action:'Suppression'
+          });
+          closeModal();
+        }catch(err){
+          alert('Erreur suppression: '+err.message);
+        }
+      }
+    });
         // TODO: Firestore deleteDoc
         closeModal();
         renderGrid();
@@ -410,18 +447,43 @@
     });
 
     // Historique (placeholder)
-    document.getElementById('historyBtn').addEventListener('click', ()=>{
-      alert('Historique: à implémenter avec Firestore (collection "historique").\nEx: "'+CURRENT_USER+' a changé le statut..."');
+    document.getElementById('historyBtn').addEventListener('click', async ()=>{
+      if(!ACTIVE_DETAIL_ID) return;
+      try{
+        const qHist = query(collection(db,'historique'), where('vetementId','==',ACTIVE_DETAIL_ID), orderBy('date','desc'), limit(10));
+        const snap = await getDocs(qHist);
+        const lines = [];
+        snap.forEach(d=>{
+          const h = d.data();
+          const ts = h.date?.seconds ? new Date(h.date.seconds*1000) : new Date();
+          lines.push(`• ${ts.toLocaleString()} — ${h.membre}: ${h.action}`);
+        });
+        alert(lines.length ? lines.join('
+') : 'Aucune entrée pour le moment.');
+      }catch(err){
+        alert('Erreur lecture historique: '+err.message);
+      }
+    });
     });
 
     function setStatus(id, statut, reason){
-      const item = DATA.find(x=>x.id===id);
-      if(!item) return;
-      item.statut = statut;
-      // TODO: updateDoc Firestore + addDoc historique { date, membre: CURRENT_USER, action: reason }
-      renderGrid();
+      const ref = doc(db,'vetements', id);
+      updateDoc(ref, {
+        statut,
+        dateModification: serverTimestamp(),
+        modifiePar: CURRENT_USER
+      }).then(async ()=>{
+        await addDoc(collection(db,'historique'),{
+          vetementId: id,
+          date: serverTimestamp(),
+          membre: CURRENT_USER,
+          action: reason || `Statut → ${statut}`
+        });
+        renderGrid();
+      }).catch(err=>{
+        alert('Erreur mise à jour statut: '+err.message);
+      });
     }
   </script>
 </body>
 </html>
-
