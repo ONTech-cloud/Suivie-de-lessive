@@ -203,21 +203,31 @@
     </div>
   </div>
 
-  <script>
-    
-     // Firebase config fournie
-      import { initializeApp } from "firebase/app";
-      import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
-      import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-      const firebaseConfig = {
-        apiKey: "AIzaSyAhJROpEyoGX0Hpm1QU8XirWjEqQK6eChE",
-        authDomain: "suivie-lessive.firebaseapp.com",
-        projectId: "suivie-lessive",
-        storageBucket: "suivie-lessive.firebasestorage.app",
-        messagingSenderId: "565381881043",
-        appId: "1:565381881043:web:16e75adb9fcf9224f24826"
-     *};
-     
+  <!-- Script en module pour autoriser les imports -->
+  <script type="module">
+    // Firebase via CDN (ESM)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import {
+      getStorage, ref, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    // Config Firebase corrigée (sans le *)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAhJROpEyoGX0Hpm1QU8XirWjEqQK6eChE",
+      authDomain: "suivie-lessive.firebaseapp.com",
+      projectId: "suivie-lessive",
+      storageBucket: "suivie-lessive.firebasestorage.app",
+      messagingSenderId: "565381881043",
+      appId: "1:565381881043:web:16e75adb9fcf9224f24826"
+    };
+
+    // Initialisation (tu pourras t'en servir quand tu brancheras Firestore/Storage)
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
 
     // --- Données mock pour démo hors-ligne ---
     const MOCK_DATA = [
