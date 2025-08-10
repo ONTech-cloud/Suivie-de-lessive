@@ -1,489 +1,68 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Suivi Lessive Familial</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion Lessive - Accueil</title>
   <style>
-    :root{
-      --bg:#f3f4f6;
-      --card:#ffffff;
-      --accent1-start:#6D28D9; --accent1-end:#06B6D4;
-      --accent2-start:#10B981; --accent2-end:#34D399;
-      --muted:#6b7280;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:#111827}
-    .container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-    .split{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1100px;width:100%}
-    .big-btn{
-      border-radius:28px;padding:44px 28px;font-size:22px;font-weight:700;color:#fff;border:0;
-      display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 30px rgba(2,6,23,0.12);
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #74ABE2, #5563DE);
     }
-    .g1{background:linear-gradient(135deg,var(--accent1-start),var(--accent1-end))}
-    .g2{background:linear-gradient(135deg,var(--accent2-start),var(--accent2-end))}
-    .card{background:var(--card);border-radius:18px;box-shadow:0 8px 22px rgba(2,6,23,0.06);padding:18px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    h1{margin:0;font-size:20px}
-    .small{font-size:13px;color:var(--muted)}
-    .flex{display:flex;gap:10px}
-    .btn{padding:8px 12px;border-radius:10px;border:0;background:#eef2ff;cursor:pointer}
-    input,select,textarea{padding:10px;border-radius:10px;border:1px solid #e6e7eb;outline:none;font-size:14px}
-    .grid{display:grid;gap:10px}
-    .row{display:flex;gap:10px;align-items:center}
-    .thumb{width:72px;height:72px;border-radius:12px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center}
-    img.fit{width:100%;height:100%;object-fit:cover}
-    .list{display:grid;gap:10px}
-    .item{display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;background:#fff;border:1px solid #f0f1f3}
-    .badge{padding:6px 10px;border-radius:999px;font-weight:600;font-size:12px}
-    .status-lessive{background:#fef3c7;color:#92400e}
-    .status-pliage{background:#d1fae5;color:#065f46}
-    .status-armoire{background:#dbeafe;color:#1e3a8a}
-    .controls{display:flex;gap:8px;flex-wrap:wrap}
-    .big-action{padding:14px 18px;border-radius:18px;border:0;background:#f3f4f6;cursor:pointer;font-weight:700}
-    @media (max-width:900px){
-      .split{grid-template-columns:1fr;max-width:900px}
-      .big-btn{padding:30px;font-size:18px}
+
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
-    .muted{color:var(--muted)}
-    .center{text-align:center}
-    .mb{margin-bottom:12px}
-    .lang-toggle{cursor:pointer;padding:6px 10px;border-radius:10px;background:#fff;border:1px solid #e6e7eb}
+
+    .button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+      text-decoration: none;
+      border-radius: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .button:hover {
+      transform: scale(1.05);
+    }
+
+    .voir {
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    }
+
+    .gestion {
+      background: linear-gradient(135deg, #9C27B0, #6A1B9A);
+    }
+
+    @media (max-width: 768px) {
+      .button {
+        font-size: 1.5rem;
+      }
+    }
   </style>
 </head>
 <body>
+
   <div class="container">
-    <div id="app" class="split">
-      <!-- LEFT: accueil / admin -->
-      <div id="left-pane" class="card center">
-        <div id="home-screen">
-          <div style="padding:28px;max-width:520px">
-            <h1>Suivi Lessive Familial</h1>
-            <p class="small mb">Accès libre — tablette optimisée. Choisis une action.</p>
-            <div style="display:grid;gap:16px;margin-top:24px">
-              <button class="big-btn g1" id="btn-view">Voir vêtements</button>
-              <button class="big-btn g2" id="btn-admin">Administrateur</button>
-            </div>
-            <p class="small" style="margin-top:20px">Design moderne • vignettes obligatoires • historique</p>
-          </div>
-        </div>
-
-        <div id="admin-entry" style="display:none;padding:18px" >
-          <h1>Entrée administrateur</h1>
-          <p class="small mb">Sélectionne ton nom (action sera enregistrée).</p>
-          <div class="grid" style="margin-top:10px">
-            <div class="row" id="names-list"></div>
-            <div class="row">
-              <button class="btn" id="btn-admin-back">Retour</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="admin-panel" style="display:none">
-          <div class="topbar mb">
-            <div>
-              <h1 id="admin-title">Admin — édition</h1>
-              <div class="small muted" id="current-admin"></div>
-            </div>
-            <div class="flex">
-              <button class="btn" id="btn-admin-to-home">Accueil</button>
-              <button class="lang-toggle" id="lang-toggle">FR/AR</button>
-            </div>
-          </div>
-
-          <div class="grid">
-            <!-- Ajouter vêtement -->
-            <div class="card">
-              <h3 style="margin:0 0 8px 0" id="form-title">Ajouter un vêtement</h3>
-              <div class="grid">
-                <input id="item-name" placeholder="Nom (ex. T-shirt rouge)" />
-                <div class="row">
-                  <select id="item-owner"></select>
-                  <select id="item-category"></select>
-                  <input id="new-category" placeholder="Ajouter catégorie..." />
-                  <button class="btn" id="btn-add-category">Ajouter</button>
-                </div>
-                <div class="row">
-                  <label class="btn">Choisir photo
-                    <input type="file" id="item-photo" accept="image/*" style="display:none" />
-                  </label>
-                  <div class="thumb" id="thumb-preview">Aucune</div>
-                </div>
-                <textarea id="item-comment" placeholder="Commentaire (optionnel)"></textarea>
-                <div class="row">
-                  <button class="big-action" id="btn-add-item">Ajouter</button>
-                  <button class="big-action" id="btn-clear-form">Effacer</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Actions en masse -->
-            <div class="card">
-              <h3 style="margin:0 0 8px 0">Actions en masse</h3>
-              <div class="controls mb">
-                <button class="big-action" data-status="lessive">Marquer lessive</button>
-                <button class="big-action" data-status="pliage">Marquer pliage</button>
-                <button class="big-action" data-status="armoire">Marquer armoire</button>
-                <button class="big-action" id="btn-delete-selected" style="background:#fee2e2">Supprimer sélection</button>
-              </div>
-              <div class="small muted">Sélectionne les items dans la liste à droite pour appliquer.</div>
-            </div>
-
-            <!-- Historique -->
-            <div class="card" style="grid-column:1/-1">
-              <h3 style="margin:0 0 8px 0">Historique récent</h3>
-              <div id="history-list" class="list"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT: affichage visiteurs + liste éditable -->
-      <div id="right-pane" class="card">
-        <div class="topbar mb">
-          <div>
-            <h1 id="right-title">Où sont les vêtements ?</h1>
-            <div class="small muted">Filtrer par personne / catégorie / statut</div>
-          </div>
-          <div class="flex">
-            <button class="btn" id="btn-refresh">Actualiser</button>
-            <button class="btn" id="btn-back-to-home" style="display:none">Accueil</button>
-          </div>
-        </div>
-
-        <div class="grid">
-          <div class="row">
-            <select id="filter-owner"><option value="all">Tous</option></select>
-            <select id="filter-category"><option value="all">Toutes catégories</option></select>
-            <select id="filter-status">
-              <option value="all">Tous statuts</option>
-              <option value="lessive">Lessive</option>
-              <option value="pliage">Pliage</option>
-              <option value="armoire">Armoire</option>
-            </select>
-            <input id="filter-q" placeholder="Recherche..." />
-          </div>
-
-          <div id="items-list" class="list" style="margin-top:8px"></div>
-        </div>
-      </div>
-    </div>
+    <a href="voir.html" class="button voir">👀 Voir vêtements</a>
+    <a href="gestion.html" class="button gestion">⚙️ Gestion</a>
   </div>
 
-  <!-- Firebase (modules) -->
-  <script type="module">
-    /* ====== CONFIG: remplace par ta config Firebase (obligatoire) ====== */
-    const firebaseConfig = {
-    apiKey: "AIzaSyAhJROpEyoGX0Hpm1QU8XirWjEqQK6eChE",
-    authDomain: "suivie-lessive.firebaseapp.com",
-    projectId: "suivie-lessive",
-    storageBucket: "suivie-lessive.firebasestorage.app",
-    messagingSenderId: "565381881043",
-    appId: "1:565381881043:web:16e75adb9fcf9224f24826"
-    };
-    /* ================================================================= */
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, doc, updateDoc, deleteDoc,
-      onSnapshot, query, orderBy, serverTimestamp, getDocs
-    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-    import { getStorage, ref as sref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
-
-    // Init Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-
-    // Membres & catégories par défaut
-    const MEMBERS = ["omran","amir","youssof","ahlam","loukman"];
-    const DEFAULT_CATEGORIES = [
-      { id: "tshirt", fr: "T-shirt", ar: "تي شيرت" },
-      { id: "pantalon", fr: "Pantalon", ar: "سروال" },
-      { id: "short", fr: "Short", ar: "شورت" },
-      { id: "veste", fr: "Veste", ar: "سترة" }
-    ];
-
-    // Etat local
-    let state = { mode:'home', adminName:null, categories:[], items:[], selectedIds:new Set(), lang:'fr' };
-
-    // DOM refs
-    const $ = s => document.querySelector(s);
-    const $$ = s => Array.from(document.querySelectorAll(s));
-    const homeScreen = $('#home-screen'); const adminEntry = $('#admin-entry'); const adminPanel = $('#admin-panel');
-    const namesList = $('#names-list'); const currentAdmin = $('#current-admin'); const itemOwner = $('#item-owner');
-    const itemCategory = $('#item-category'); const newCategory = $('#new-category'); const btnAddCategory = $('#btn-add-category');
-    const itemName = $('#item-name'); const itemPhoto = $('#item-photo'); const thumbPreview = $('#thumb-preview');
-    const btnAddItem = $('#btn-add-item'); const btnClearForm = $('#btn-clear-form'); const itemsList = $('#items-list');
-    const filterOwner = $('#filter-owner'); const filterCategory = $('#filter-category'); const filterStatus = $('#filter-status');
-    const filterQ = $('#filter-q'); const historyList = $('#history-list'); const langToggle = $('#lang-toggle');
-
-    // Initial UI wiring
-    $('#btn-view').addEventListener('click', ()=>{ state.mode='view'; render(); });
-    $('#btn-admin').addEventListener('click', ()=>{ state.mode='admin-entry'; render(); });
-    $('#btn-admin-back').addEventListener('click', ()=>{ state.mode='home'; render(); });
-    $('#btn-admin-to-home').addEventListener('click', ()=>{ state.mode='home'; state.adminName=null; render(); });
-    $('#btn-back-to-home').addEventListener('click', ()=>{ state.mode='home'; render(); });
-    $('#btn-refresh').addEventListener('click', ()=>{ /* no-op: realtime already updates */ alert('Actualisé (données en temps réel).') });
-
-    // Seed categories if none
-    async function seedCategoriesIfEmpty(){
-      const q = query(collection(db,'categories'), orderBy('fr'));
-      const snap = await getDocs(q);
-      if (snap.empty) {
-        for (const c of DEFAULT_CATEGORIES) {
-          await addDoc(collection(db,'categories'), { id: c.id, fr: c.fr, ar: c.ar });
-        }
-      }
-    }
-
-    // Subscribe realtime: categories, items, history
-    function subscribeRealtime(){
-      onSnapshot(query(collection(db,'categories'), orderBy('fr')), snap=>{
-        state.categories = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-        renderCategoryOptions();
-      });
-      onSnapshot(query(collection(db,'items'), orderBy('dateCreated','desc')), snap=>{
-        state.items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderItems();
-      });
-      onSnapshot(query(collection(db,'history'), orderBy('timestamp','desc')), snap=>{
-        const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderHistory(arr.slice(0,80));
-      });
-    }
-
-    // Render UI depending on mode
-    function render(){
-      homeScreen.style.display = state.mode==='home' ? 'block' : 'none';
-      adminEntry.style.display = state.mode==='admin-entry' ? 'block' : 'none';
-      adminPanel.style.display = state.mode==='admin' ? 'block' : 'none';
-      $('#btn-back-to-home').style.display = state.mode !== 'home' ? 'inline-block' : 'none';
-      if (state.mode==='admin-entry') renderAdminNames();
-      if (state.mode==='admin') currentAdmin.textContent = state.adminName ? `Actif : ${state.adminName}` : 'Aucun nom';
-      renderCategoryOptions();
-      renderItems();
-      // language button text
-      langToggle.textContent = state.lang==='fr' ? 'FR/AR' : 'FR/AR';
-    }
-
-    // Fill admin names buttons
-    function renderAdminNames(){
-      namesList.innerHTML='';
-      for (const n of MEMBERS){
-        const b = document.createElement('button'); b.className='btn'; b.textContent=n;
-        b.addEventListener('click', ()=>{ state.adminName=n; state.mode='admin'; render(); });
-        namesList.appendChild(b);
-      }
-    }
-
-    // Category options for selects
-    function renderCategoryOptions(){
-      // fill itemCategory & filterCategory
-      itemCategory.innerHTML=''; filterCategory.innerHTML='<option value="all">Toutes catégories</option>';
-      for (const c of state.categories){
-        const o = document.createElement('option'); o.value=c.docId; o.textContent=c.fr || c.id;
-        itemCategory.appendChild(o);
-        const o2 = document.createElement('option'); o2.value=c.docId; o2.textContent=c.fr || c.id;
-        filterCategory.appendChild(o2);
-      }
-      // owners
-      itemOwner.innerHTML=''; filterOwner.innerHTML='<option value="all">Tous</option>';
-      for (const m of MEMBERS){
-        const o = document.createElement('option'); o.value=m; o.textContent=m;
-        itemOwner.appendChild(o);
-        const o2 = document.createElement('option'); o2.value=m; o2.textContent=m;
-        filterOwner.appendChild(o2);
-      }
-    }
-
-    // Render items list (applique filtres)
-    function renderItems(){
-      itemsList.innerHTML='';
-      const qOwner = filterOwner.value || 'all';
-      const qCat = filterCategory.value || 'all';
-      const qStatus = filterStatus.value || 'all';
-      const qText = (filterQ.value || '').toLowerCase();
-
-      const visible = state.items.filter(it=>{
-        if (qOwner!=='all' && it.proprietaire !== qOwner) return false;
-        if (qCat!=='all' && it.categorieDocId !== qCat) return false;
-        if (qStatus!=='all' && it.statut !== qStatus) return false;
-        if (qText && !((it.nom||'').toLowerCase().includes(qText) || (it.categorieFr||'').toLowerCase().includes(qText))) return false;
-        return true;
-      });
-
-      for (const it of visible){
-        const div = document.createElement('div'); div.className='item';
-        div.innerHTML = `
-          <input type="checkbox" data-id="${it.id}" ${state.selectedIds.has(it.id)?'checked':''} />
-          <div class="thumb">${it.photoURL ? `<img class="fit" src="${it.photoURL}" />` : 'No img'}</div>
-          <div style="flex:1">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <div style="font-weight:700">${escapeHtml(it.nom||'—')}</div>
-                <div class="small muted">${escapeHtml(it.categorieFr||'—')} • ${escapeHtml(it.proprietaire||'—')}</div>
-              </div>
-              <div>${statusBadge(it.statut||'armoire')}</div>
-            </div>
-            <div class="small muted" style="margin-top:6px">${escapeHtml(it.commentaire||'')}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-            <button class="btn" data-action="edit" data-id="${it.id}">Edit</button>
-            <button class="btn" data-action="single-delete" data-id="${it.id}" style="background:#fee2e2">Suppr</button>
-          </div>
-        `;
-        itemsList.appendChild(div);
-      }
-
-      // attach events
-      itemsList.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-        cb.addEventListener('change', ()=> {
-          const id = cb.dataset.id;
-          if (cb.checked) state.selectedIds.add(id); else state.selectedIds.delete(id);
-        });
-      });
-      itemsList.querySelectorAll('button[data-action]').forEach(btn=>{
-        btn.addEventListener('click', async ()=> {
-          const id = btn.dataset.id; const act = btn.dataset.action;
-          if (act==='edit') openEditModal(id);
-          if (act==='single-delete') {
-            if (!confirm('Supprimer cet item ?')) return;
-            await deleteItem(id);
-          }
-        });
-      });
-    }
-
-    // Render history
-    function renderHistory(arr){
-      historyList.innerHTML='';
-      for (const h of arr){
-        const d = document.createElement('div'); d.className='item'; d.style.padding='8px';
-        const ts = h.timestamp ? (h.timestamp.toDate ? h.timestamp.toDate().toLocaleString() : new Date(h.timestamp.seconds*1000).toLocaleString()) : '';
-        d.innerHTML = `
-          <div style="flex:1">
-            <div style="font-weight:700">${escapeHtml(h.itemNom||'—')}</div>
-            <div class="small muted">${escapeHtml(h.nomAdmin||'—')} • ${ts}</div>
-            <div class="small"> ${escapeHtml(h.ancienStatut||'')} → ${escapeHtml(h.nouveauStatut||'')} ${h.commentaireAction ? '• '+escapeHtml(h.commentaireAction):''}</div>
-          </div>
-        `;
-        historyList.appendChild(d);
-      }
-    }
-
-    function statusBadge(s){
-      if (s==='lessive') return `<span class="badge status-lessive">Lessive</span>`;
-      if (s==='pliage') return `<span class="badge status-pliage">Pliage</span>`;
-      return `<span class="badge status-armoire">Armoire</span>`;
-    }
-
-    function escapeHtml(s){ if(!s) return ''; return s.toString().replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-
-    // IMAGE preview & upload helper
-    let lastFile = null;
-    itemPhoto.addEventListener('change', e=>{
-      const f = e.target.files[0]; if (!f){ thumbPreview.innerText='Aucune'; lastFile=null; return; }
-      lastFile = f; const url = URL.createObjectURL(f); thumbPreview.innerHTML = `<img class="fit" src="${url}" />`;
-    });
-    btnClearForm.addEventListener('click', ()=>{ itemName.value=''; itemPhoto.value=''; document.getElementById('item-comment').value=''; thumbPreview.innerText='Aucune'; lastFile=null; });
-
-    // Add category
-    btnAddCategory.addEventListener('click', async ()=>{
-      const txt = newCategory.value.trim(); if (!txt) return alert('Nom de catégorie vide');
-      try { await addDoc(collection(db,'categories'), { fr: txt, ar: txt }); newCategory.value=''; alert('Catégorie ajoutée'); } catch(e){ console.error(e); alert('Erreur'); }
-    });
-
-    // Add item
-    btnAddItem.addEventListener('click', async ()=>{
-      const name = itemName.value.trim(); const owner = itemOwner.value; const catId = itemCategory.value; const comment = document.getElementById('item-comment').value || '';
-      if (!name) return alert('Donne un nom au vêtement'); if (!owner) return alert('Choisis un propriétaire'); if (!catId) return alert('Choisis une catégorie'); if (!lastFile) return alert('Photo obligatoire');
-      try {
-        const path = `items/${Date.now()}_${lastFile.name}`;
-        const url = await uploadFileAndGetURL(lastFile, path);
-        const cat = state.categories.find(c=>c.docId===catId) || {};
-        const docRef = await addDoc(collection(db,'items'), {
-          nom: name, proprietaire: owner, categorieDocId: catId, categorieFr: cat.fr || '',
-          statut: 'lessive', photoURL: url, commentaire: comment, dateCreated: serverTimestamp(), dateUpdated: serverTimestamp()
-        });
-        await addDoc(collection(db,'history'), {
-          itemId: docRef.id, itemNom: name, ancienStatut: null, nouveauStatut: 'lessive', nomAdmin: state.adminName || 'anonyme', commentaireAction: 'Ajout', timestamp: serverTimestamp()
-        });
-        itemName.value=''; document.getElementById('item-comment').value=''; itemPhoto.value=''; thumbPreview.innerText='Aucune'; lastFile=null;
-        alert('Vêtement ajouté ✅');
-      } catch(e){ console.error(e); alert('Erreur upload/ajout'); }
-    });
-
-    async function uploadFileAndGetURL(file, path){
-      const ref = sref(storage, path);
-      return new Promise((res, rej)=>{
-        const task = uploadBytesResumable(ref, file);
-        task.on('state_changed', ()=>{}, err=>rej(err), async ()=> {
-          const url = await getDownloadURL(task.snapshot.ref);
-          res(url);
-        });
-      });
-    }
-
-    // Bulk status change
-    $$('.big-action[data-status]').forEach(b=> b.addEventListener('click', async ()=>{
-      const newStatus = b.dataset.status;
-      if (!state.adminName) return alert('Choisis ton nom en mode admin.');
-      if (state.selectedIds.size===0) return alert('Aucune sélection.');
-      if (!confirm(`Confirmer changement vers "${newStatus}" pour ${state.selectedIds.size} item(s) ?`)) return;
-      for (const id of Array.from(state.selectedIds)){
-        const it = state.items.find(x=>x.id===id); if(!it) continue;
-        const dref = doc(db,'items',id);
-        await updateDoc(dref, { statut: newStatus, dateUpdated: serverTimestamp() });
-        await addDoc(collection(db,'history'), { itemId:id, itemNom: it.nom||'', ancienStatut: it.statut||'', nouveauStatut: newStatus, nomAdmin: state.adminName, commentaireAction:'', timestamp: serverTimestamp() });
-      }
-      state.selectedIds.clear(); alert('Mise à jour effectuée.');
-    }));
-
-    // Delete selected
-    $('#btn-delete-selected').addEventListener('click', async ()=>{
-      if (state.selectedIds.size===0) return alert('Aucune sélection.');
-      if (!confirm('Supprimer les items sélectionnés ?')) return;
-      for (const id of Array.from(state.selectedIds)){
-        await deleteItem(id);
-      }
-      state.selectedIds.clear(); alert('Supprimés.');
-    });
-
-    // Single delete
-    async function deleteItem(id){
-      try {
-        await deleteDoc(doc(db,'items',id));
-        await addDoc(collection(db,'history'), { itemId:id, itemNom:'', ancienStatut:'', nouveauStatut:'deleted', nomAdmin: state.adminName || 'anonyme', commentaireAction:'Suppression', timestamp: serverTimestamp() });
-      } catch(e){ console.error(e); alert('Erreur suppression'); }
-    }
-
-    // Edit modal (prompt simple)
-    async function openEditModal(id){
-      const it = state.items.find(x=>x.id===id); if (!it) return;
-      if (!state.adminName) return alert('Choisis ton nom en mode admin');
-      const newName = prompt('Nom du vêtement', it.nom) || it.nom;
-      const newComment = prompt('Commentaire', it.commentaire||'') || it.commentaire||'';
-      const newStatus = prompt('Statut (lessive / pliage / armoire)', it.statut) || it.statut;
-      const dref = doc(db,'items',id);
-      await updateDoc(dref, { nom:newName, commentaire:newComment, statut:newStatus, dateUpdated: serverTimestamp() });
-      await addDoc(collection(db,'history'), { itemId:id, itemNom:newName, ancienStatut: it.statut||'', nouveauStatut:newStatus, nomAdmin: state.adminName, commentaireAction:'Modification', timestamp: serverTimestamp() });
-      alert('Modifié.');
-    }
-
-    // Lang toggle simple (labels exist in DB; here UI labels minimal)
-    langToggle.addEventListener('click', ()=>{ state.lang = state.lang==='fr' ? 'ar' : 'fr'; alert('Basculer langue (interface minimale).'); });
-
-    // Start: seed + subscribe + initial render
-    (async ()=>{ try { await seedCategoriesIfEmpty(); subscribeRealtime(); render(); } catch(e){ console.error(e); alert('Erreur initialisation Firebase. Vérifie firebaseConfig.'); } })();
-
-    // small helper to show alert if firebaseConfig not replaced
-    (function checkConfig(){
-      if (firebaseConfig.apiKey.includes('REPLACE')) {
-        setTimeout(()=>alert('⚠️ Remplace firebaseConfig dans le code par ta config Firebase avant d\'utiliser (APIKEY actuellement générique).'),300);
-      }
-    })();
-  </script>
 </body>
 </html>
